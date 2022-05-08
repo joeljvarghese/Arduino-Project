@@ -1,0 +1,146 @@
+//An Arduino Uno Remote Bluetooth Control Project by Joel Varghese
+
+#include <DHT.h>
+#include <LiquidCrystal.h>
+#define TYPE DHT11
+
+int rs=7; //setting up lcd pins
+int en=8;
+int d4=9;
+int d5=10;
+int d6=11;
+int d7=12;
+
+int sensePin=2; //dht sensor pin
+float humidity;
+float tempC;
+
+int setTime = 500; //constants for time delay
+int dt=5000;
+
+String ic ; //bluetooth incoming string
+int rPin = 6; //rgb led pin connections
+int gPin = 5;
+int bPin = 4;
+int rBright=0;
+int bBright=0;
+int gBright=0;
+float dfact=1;
+
+LiquidCrystal lcd(rs,en,d4,d5,d6,d7); //create an lcd object
+DHT ht(sensePin, TYPE); //create a DHT sensor object
+
+void setup() {
+  Serial.begin(9600); //UART Communication
+  pinMode (rPin, OUTPUT); //setting RGB pins in output mode
+  pinMode (gPin, OUTPUT);
+  pinMode (bPin, OUTPUT);
+  ht.begin(); //initializes the DHT SENSOR 
+  lcd.begin(16,2); //initializes the LCD display
+  
+  
+}
+
+void loop() {
+  if (Serial.available() >0){ //we are waiting for a remote Bluetooth control
+    ic = Serial.readString();
+    Serial.print(ic);
+    Serial.print("\n");
+    
+    if (ic == "T") { //Temperature Display Mode has been clicked
+      lcd.noBlink();
+      Serial.print("Welcom");
+      lcd.print ("Welcome");
+      delay(2000);
+      lcd.clear();
+      humidity= ht.readHumidity();
+      tempC = ht.readTemperature ();
+      lcd.setCursor(0,0);
+      lcd.print("Temp is ");
+      lcd.setCursor(2,1);
+      lcd.print(tempC);
+      lcd.print ("C");
+      delay(dt);
+      lcd.clear();
+      lcd.setCursor(0,0);
+      lcd.print("Humidity is ");
+      lcd.setCursor(2,1);
+      lcd. print (humidity);
+      delay(dt);
+      lcd.clear();
+      lcd.print("Thank You");
+      delay(1000);
+      lcd.clear();
+    }
+
+    else if (ic == "0"){ //Lamp Switch OFF
+      rBright=0;
+      bBright=0;
+      gBright=0;
+      dfact=0;
+      
+    } 
+    else if (ic == "7"){ //Lamp Switch ON
+      rBright=255;
+      bBright=255;
+      gBright=255;
+      dfact=1;
+      
+    }
+    
+    else if (ic == "Red"){
+      rBright=255;
+      bBright=0;
+      gBright=0;
+      dfact=1;
+    }
+    else if (ic== "Blue"){
+      rBright=0;
+      bBright=255;
+      gBright=0;
+      dfact=1;
+    }
+    else if (ic == "Green"){
+      rBright=0;
+      bBright=0;
+      gBright=255;
+      dfact=1;
+    }
+     else if (ic== "Cyan"){
+      rBright=0;
+      bBright=255;
+      gBright=255;
+      dfact=1;
+    }
+      else if (ic == "Magenta"){
+      rBright=255;
+      bBright=255;
+      gBright=0;
+      dfact=1;
+    }
+     else if (ic == "Yellow"){
+      rBright=255;
+      bBright=0;
+      gBright=255;
+      dfact=1;
+    }
+   
+    
+      else if (ic =="25"){
+        dfact=0.25;
+      }
+      else if (ic =="50"){
+        dfact=0.5;
+      }
+      else if (ic =="75"){
+        dfact=0.75;
+      }
+      else if (ic =="100"){
+        dfact=1;
+      }
+     
+     analogWrite(rPin, dfact*rBright);
+     analogWrite(gPin, dfact*gBright);
+     analogWrite(bPin, dfact*bBright);
+    }
+  }
